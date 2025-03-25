@@ -9,6 +9,9 @@ import {
 // Enum for contact methods
 const ContactMethodEnum = z.enum(["phone", "email", "instagram", "telegram"]);
 
+// Enum for timeout options (in minutes)
+const TimeoutEnum = z.enum(["15", "30", "45", "60", "90"]);
+
 export const needPostRouter = createTRPCRouter({
   // Create a new need post
   create: protectedProcedure
@@ -21,6 +24,7 @@ export const needPostRouter = createTRPCRouter({
         locationLat: z.number().min(-90).max(90),
         locationLng: z.number().min(-180).max(180),
         locationName: z.string().optional(),
+        timeout: TimeoutEnum, // İlan timeout süresi (dakika)
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -136,6 +140,10 @@ export const needPostRouter = createTRPCRouter({
             locationLat: input.locationLat,
             locationLng: input.locationLng,
             locationName: input.locationName,
+            // timeout değerinden expiresAt hesapla
+            expiresAt: new Date(
+              Date.now() + parseInt(input.timeout) * 60 * 1000,
+            ),
             // Default values
             isUrgent: false,
             isAnonymous: false,
@@ -300,6 +308,7 @@ export const needPostRouter = createTRPCRouter({
         status: {
           in: ["PENDING", "INPROGRESS"],
         },
+        isExpired: false, // Zaman aşımına uğramamış ilanları getir
       },
       orderBy: {
         createdAt: "desc",
@@ -314,6 +323,7 @@ export const needPostRouter = createTRPCRouter({
         locationLat: true,
         locationLng: true,
         createdAt: true,
+        expiresAt: true, // Zaman aşımı bilgisini ekle
       },
     });
 

@@ -22,6 +22,9 @@ export const env = createEnv({
             z.string().optional(),
         GOOGLE_CLIENT_ID: z.string(),
         GOOGLE_CLIENT_SECRET: z.string(),
+        CRON_SECRET: process.env.NODE_ENV === "production" ?
+            z.string() :
+            z.string().optional(),
     },
 
     /**
@@ -43,6 +46,7 @@ export const env = createEnv({
         NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
         GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
         GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+        CRON_SECRET: process.env.CRON_SECRET,
         // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
     },
     /**

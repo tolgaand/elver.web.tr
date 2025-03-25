@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, differenceInMilliseconds } from "date-fns";
 import { tr } from "date-fns/locale";
 import { api } from "~/trpc/react";
 
 export default function RecentNeedsTable() {
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
+  const [now, setNow] = useState(new Date());
 
   // Son ihtiyaçları getir
   const { data: needPosts, refetch } = api.needPost.getActiveNeeds.useQuery(
@@ -19,10 +20,11 @@ export default function RecentNeedsTable() {
     },
   );
 
-  // 10 saniyede bir yenile
+  // 10 saniyede bir yenile ve şimdiki zamanı güncelle
   useEffect(() => {
     const interval = setInterval(() => {
       void refetch();
+      setNow(new Date());
     }, 10000);
 
     return () => clearInterval(interval);
@@ -31,6 +33,7 @@ export default function RecentNeedsTable() {
   // Client-side rendering için
   useEffect(() => {
     setIsClient(true);
+    setNow(new Date());
   }, []);
 
   // İhtiyaç detayına gitmek için
@@ -48,6 +51,45 @@ export default function RecentNeedsTable() {
     } catch {
       return "Bilinmiyor";
     }
+  };
+
+  // İlanın kalan süresini hesapla ve yüzde olarak döndür
+  const calculateRemainingTimePercentage = (
+    createdAt: Date,
+    expiresAt: Date | null,
+  ) => {
+    if (!expiresAt) return 0;
+
+    try {
+      const created = new Date(createdAt);
+      const expires = new Date(expiresAt);
+      const current = now;
+
+      // Eğer zaten süresi dolmuşsa
+      if (current > expires) return 100;
+
+      // Toplam ilan süresi (ms cinsinden)
+      const totalDuration = differenceInMilliseconds(expires, created);
+
+      // Geçen süre (ms cinsinden)
+      const elapsedTime = differenceInMilliseconds(current, created);
+
+      // Geçen zamanın yüzdesi
+      const percentage = (elapsedTime / totalDuration) * 100;
+
+      // 0-100 arasında sınırla
+      return Math.min(Math.max(percentage, 0), 100);
+    } catch {
+      return 0;
+    }
+  };
+
+  // Kalan süreye göre renk belirle
+  const getTimeBarColor = (percentage: number) => {
+    if (percentage >= 90) return "bg-red-500"; // %90 ve üzeri - kırmızı
+    if (percentage >= 70) return "bg-orange-500"; // %70 ve üzeri - turuncu
+    if (percentage >= 50) return "bg-yellow-500"; // %50 ve üzeri - sarı
+    return "bg-green-500"; // %50 altı - yeşil
   };
 
   if (!isClient) {
@@ -82,6 +124,9 @@ export default function RecentNeedsTable() {
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Durum
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                Kalan Süre
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase">
                 İşlem
@@ -133,6 +178,39 @@ export default function RecentNeedsTable() {
                             : "İptal Edildi"}
                     </span>
                   </td>
+                  <td className="px-6 py-4 text-sm">
+                    {post.expiresAt ? (
+                      <div>
+                        <div className="mb-1 flex items-center justify-between">
+                          <div className="text-xs text-gray-500">
+                            {formatDistanceToNow(new Date(post.expiresAt), {
+                              addSuffix: true,
+                              locale: tr,
+                            })}
+                          </div>
+                        </div>
+                        <div className="h-2.5 w-full rounded-full bg-gray-200">
+                          {/* İlerleme çubuğu */}
+                          <div
+                            className={`h-2.5 rounded-full ${getTimeBarColor(
+                              calculateRemainingTimePercentage(
+                                post.createdAt,
+                                post.expiresAt,
+                              ),
+                            )}`}
+                            style={{
+                              width: `${calculateRemainingTimePercentage(
+                                post.createdAt,
+                                post.expiresAt,
+                              )}%`,
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-500">Süresiz</span>
+                    )}
+                  </td>
                   <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
                     <button
                       onClick={() => handleViewDetails(post.id)}
@@ -146,7 +224,7 @@ export default function RecentNeedsTable() {
             ) : (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={6}
                   className="px-6 py-10 text-center text-sm text-gray-500"
                 >
                   Aktif ihtiyaç ilanı bulunamadı.

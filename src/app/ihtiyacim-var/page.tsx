@@ -16,6 +16,15 @@ enum ContactPreference {
   TELEGRAM = "telegram",
 }
 
+// Timeout seçenekleri
+enum TimeoutOption {
+  MINUTES_15 = "15",
+  MINUTES_30 = "30",
+  MINUTES_45 = "45",
+  MINUTES_60 = "60",
+  MINUTES_90 = "90", // Maksimum 1.5 saat
+}
+
 export default function IhtiyacimVarPage() {
   const router = useRouter();
   const { status } = useSession();
@@ -25,6 +34,9 @@ export default function IhtiyacimVarPage() {
     ContactPreference.PHONE,
   );
   const [contactDetail, setContactDetail] = useState("");
+  const [timeout, setTimeout] = useState<TimeoutOption>(
+    TimeoutOption.MINUTES_30,
+  ); // Varsayılan 30 dakika
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -162,6 +174,7 @@ export default function IhtiyacimVarPage() {
             contactDetail: formattedContactDetail,
             locationLat: position.coords.latitude,
             locationLng: position.coords.longitude,
+            timeout,
           });
         },
         (error) => {
@@ -280,6 +293,31 @@ export default function IhtiyacimVarPage() {
                   />
                 </div>
               )}
+
+              <div>
+                <label
+                  htmlFor="timeout"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                >
+                  İlan Gösterim Süresi
+                </label>
+                <select
+                  id="timeout"
+                  className="w-full rounded-lg border border-gray-300 bg-white p-3 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  value={timeout}
+                  onChange={(e) => setTimeout(e.target.value as TimeoutOption)}
+                >
+                  <option value={TimeoutOption.MINUTES_15}>15 dakika</option>
+                  <option value={TimeoutOption.MINUTES_30}>30 dakika</option>
+                  <option value={TimeoutOption.MINUTES_45}>45 dakika</option>
+                  <option value={TimeoutOption.MINUTES_60}>1 saat</option>
+                  <option value={TimeoutOption.MINUTES_90}>1.5 saat</option>
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  İlanınız bu süre sonunda otomatik olarak zaman aşımına
+                  uğrayacak ve aktif olarak gösterilmeyecektir.
+                </p>
+              </div>
 
               <button
                 type="submit"

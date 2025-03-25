@@ -5,9 +5,17 @@ import { api } from "~/trpc/react";
 import Header from "~/app/_components/header";
 import Footer from "~/app/_components/footer";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useSession, signIn } from "next-auth/react";
+import {
+  formatDistanceToNow,
+  differenceInMilliseconds,
+  format,
+  isValid,
+  parseISO,
+} from "date-fns";
+import { tr } from "date-fns/locale";
 
 // Types
 interface Tag {
@@ -21,16 +29,34 @@ interface TagRelation {
   tagId: string;
 }
 
-interface Category {
+// NeedPost interface used in this component
+interface NeedPost {
   id: string;
-  name: string;
-  slug: string;
-}
-
-interface SubCategory {
-  id: string;
-  name: string;
-  slug: string;
+  title: string;
+  description: string;
+  status: string;
+  isUrgent: boolean;
+  isAnonymous: boolean;
+  isExpired?: boolean;
+  contactMethod?: string | null;
+  contactDetail?: string | null;
+  locationLat: number;
+  locationLng: number;
+  locationName?: string | null;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  expiresAt?: string | Date | null;
+  userId: string;
+  categoryId: string;
+  category?: { id: string; name: string; slug: string };
+  subCategory?: { id: string; name: string; slug: string } | null;
+  tags?: TagRelation[];
+  helpOffers?: Array<{
+    id: string;
+    status: string;
+    message?: string | null;
+    userId: string;
+  }>;
 }
 
 // Dynamic import with no SSR for the Map component
@@ -41,11 +67,85 @@ const Map = dynamic(() => import("~/app/_components/map"), {
   ),
 });
 
+// Düzgün şekilde tarih dönüşümü yapmak için yardımcı fonksiyon
+const parseDateSafely = (
+  dateValue: string | Date | null | undefined,
+): Date | null => {
+  if (!dateValue) return null;
+
+  try {
+    const parsedDate =
+      typeof dateValue === "string" ? parseISO(dateValue) : dateValue;
+    return isValid(parsedDate) ? parsedDate : null;
+  } catch {
+    return null;
+  }
+};
+
+// ISO tarih formatı için yardımcı fonksiyon
+const toISODateStringSafe = (
+  dateValue: string | Date | null | undefined,
+): string => {
+  const parsedDate = parseDateSafely(dateValue);
+  if (!parsedDate) return new Date().toISOString();
+
+  return parsedDate.toISOString();
+};
+
 export default function NeedPostDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { status } = useSession();
   const [offerMessage, setOfferMessage] = useState("");
   const [submittingOffer, setSubmittingOffer] = useState(false);
+  const [now, setNow] = useState(new Date());
+
+  // Periyodik olarak şimdiki zamanı güncelle
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 10000); // Her 10 saniyede bir güncelle
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // İlanın kalan süresini hesapla ve yüzde olarak döndür
+  const calculateRemainingTimePercentage = (
+    createdAt: Date | string | null | undefined,
+    expiresAt: Date | string | null | undefined,
+  ): number => {
+    const parsedCreatedAt = parseDateSafely(createdAt);
+    const parsedExpiresAt = parseDateSafely(expiresAt);
+
+    if (!parsedCreatedAt || !parsedExpiresAt) return 0;
+
+    const current = now;
+
+    // Eğer zaten süresi dolmuşsa
+    if (current > parsedExpiresAt) return 100;
+
+    // Toplam ilan süresi (ms cinsinden)
+    const totalDuration = differenceInMilliseconds(
+      parsedExpiresAt,
+      parsedCreatedAt,
+    );
+
+    // Geçen süre (ms cinsinden)
+    const elapsedTime = differenceInMilliseconds(current, parsedCreatedAt);
+
+    // Geçen zamanın yüzdesi
+    const percentage = (elapsedTime / totalDuration) * 100;
+
+    // 0-100 arasında sınırla
+    return Math.min(Math.max(percentage, 0), 100);
+  };
+
+  // Kalan süreye göre renk belirle
+  const getTimeBarColor = (percentage: number) => {
+    if (percentage >= 90) return "bg-red-500"; // %90 ve üzeri - kırmızı
+    if (percentage >= 70) return "bg-orange-500"; // %70 ve üzeri - turuncu
+    if (percentage >= 50) return "bg-yellow-500"; // %50 ve üzeri - sarı
+    return "bg-green-500"; // %50 altı - yeşil
+  };
 
   // Check if user is authenticated
   const isAuthenticated = status === "authenticated";
@@ -144,12 +244,23 @@ export default function NeedPostDetailPage() {
     );
   }
 
-  const formatDate = (dateString: Date) => {
-    return new Date(dateString).toLocaleDateString("tr-TR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+  // Tarih formatı için yardımcı fonksiyon
+  const formatDateLocalized = (
+    dateValue: string | Date | null | undefined,
+  ): string => {
+    const parsedDate = parseDateSafely(dateValue);
+    if (!parsedDate) return "bilinmeyen tarihte";
+
+    return format(parsedDate, "PPP", { locale: tr });
+  };
+
+  const formatDistanceLocalized = (
+    dateValue: string | Date | null | undefined,
+  ): string => {
+    const parsedDate = parseDateSafely(dateValue);
+    if (!parsedDate) return "belirtilmeyen bir sürede";
+
+    return formatDistanceToNow(parsedDate, { addSuffix: true, locale: tr });
   };
 
   return (
@@ -188,11 +299,104 @@ export default function NeedPostDetailPage() {
                   )}
                 </div>
                 <div className="text-sm text-gray-500">
-                  <time dateTime={post.createdAt.toISOString()}>
-                    {formatDate(post.createdAt)}
+                  <time dateTime={toISODateStringSafe(post.createdAt)}>
+                    {formatDateLocalized(post.createdAt)}
                   </time>
                 </div>
               </div>
+
+              {/* İhtiyacın zaman aşımına uğrayıp uğramadığını kontrol et */}
+              {post.isExpired && (
+                <div className="mb-6 rounded-md bg-amber-50 p-4">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg
+                        className="h-5 w-5 text-amber-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-amber-800">
+                        Zaman Aşımı
+                      </h3>
+                      <div className="mt-2 text-sm text-amber-700">
+                        <p>
+                          Bu ihtiyaç ilanı zaman aşımına uğramıştır. İlan sahibi
+                          ile iletişime geçmek veya yardım teklifi göndermek
+                          artık mümkün değildir.
+                        </p>
+                        <p className="mt-1">
+                          İlan {formatDateLocalized(post.createdAt)}{" "}
+                          oluşturuldu, {formatDateLocalized(post.expiresAt)}{" "}
+                          sona erdi.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Geri sayım bilgisi */}
+              {!post.isExpired && (
+                <div className="mb-6 rounded-md bg-blue-50 p-4">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg
+                        className="h-5 w-5 text-blue-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <div className="ml-3 w-full">
+                      <h3 className="text-sm font-medium text-blue-800">
+                        İlan Süresi
+                      </h3>
+                      <div className="mt-2 text-sm text-blue-700">
+                        <p className="mb-2">
+                          Bu ihtiyaç ilanı{" "}
+                          <strong>
+                            {formatDistanceLocalized(post.expiresAt)}
+                          </strong>{" "}
+                          sona erecek.
+                        </p>
+
+                        {/* İlerleme çubuğu - kalan süreyi görsel olarak göster */}
+                        <div className="mt-3 h-2.5 w-full rounded-full bg-gray-200">
+                          <div
+                            className={`h-2.5 rounded-full ${getTimeBarColor(
+                              calculateRemainingTimePercentage(
+                                post.createdAt,
+                                post.expiresAt,
+                              ),
+                            )}`}
+                            style={{
+                              width: `${calculateRemainingTimePercentage(
+                                post.createdAt,
+                                post.expiresAt,
+                              )}%`,
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Category */}
               <div className="mb-6">

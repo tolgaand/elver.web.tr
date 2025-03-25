@@ -1,0 +1,6 @@
+{
+    "crons": [{
+        "path": "/apicron/check-expired-needs",
+        "schedule": "0 10 * * *"
+    }]
+}
