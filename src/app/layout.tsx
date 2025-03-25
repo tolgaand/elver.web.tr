@@ -16,7 +16,7 @@ const georama = Georama({
 export const metadata = {
   title: "Elver: Topluluk Dayanışma Ağı",
   description:
-    "İhtiyaç sahipleriyle yardım edebilecek kişileri buluşturan platform",
+    "Halk tarafından halk için oluşturulmuş topluluk dayanışma platformu. İhtiyaç sahipleriyle yardım edebilecek kişileri buluşturuyoruz.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
