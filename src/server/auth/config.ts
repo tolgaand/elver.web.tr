@@ -2,7 +2,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import crypto from "crypto";
-
+import { type NextRequest } from "next/server";
 import { db } from "~/server/db";
 
 // Generate a random referral code
@@ -38,132 +38,97 @@ declare module "next-auth" {
  *
  * @see https://next-auth.js.org/configuration/options
  */
-export const authConfig = {
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    }),
-  ],
-  adapter: PrismaAdapter(db),
-  session: {
-    strategy: "database",
-  },
-  callbacks: {
-    async signIn({ user, account, profile, credentials }) {
-      console.log("SIGN_IN_CALLBACK", user, account, profile);
+export const authConfig = (req: NextRequest) =>
+  ({
+    providers: [
+      GoogleProvider({
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      }),
+    ],
+    adapter: PrismaAdapter(db),
+    session: {
+      strategy: "database",
+    },
+    callbacks: {
+      async signIn({ user }) {
+        // Davet kodu sadece cookie'den alınıyor
+        const cookieInviteCode = req.cookies.get("inviteCode");
 
-      // Email is required
-      if (!user.email) {
-        return false;
-      }
+        // Email kontrolü
+        if (!user.email) {
+          return false;
+        }
 
-      // Check if user already exists (existing users can sign in)
-      const existingUser = await db.user.findUnique({
-        where: { email: user.email },
-      });
+        // Mevcut kullanıcı kontrolü - giriş yapabilir
+        const existingUser = await db.user.findUnique({
+          where: { email: user.email },
+        });
 
-      if (existingUser) {
-        // Existing user - allow sign in
-        return true;
-      }
+        if (existingUser) {
+          return true;
+        }
 
-      // Special admin email doesn't need invite code
-      if (user.email === "tolgababa21@gmail.com") {
-        // Store admin user without referrer
+        // Admin özel hesabı
+        if (user.email === "tolgababa21@gmail.com") {
+          user.referralCode = generateReferralCode();
+          user.invitationLimit = 999;
+          return true;
+        }
+
+        // Davet kodu yoksa reddet
+        if (!cookieInviteCode) {
+          return `/auth/invite-required`;
+        }
+
+        const inviteCode = cookieInviteCode.value;
+
+        // Davet kodu kontrolü
+        const inviter = await db.user.findUnique({
+          where: { referralCode: inviteCode },
+        });
+
+        if (!inviter) {
+          return `/auth/invalid-invite`;
+        }
+
+        // Davet limitini kontrol et
+        const invitesSent = await db.user.count({
+          where: { referredById: inviter.id },
+        });
+
+        if (invitesSent >= (inviter.invitationLimit ?? 5)) {
+          return `/auth/invite-limit-reached`;
+        }
+
+        // Kullanıcıyı kaydet
+        user.referredById = inviter.id;
         user.referralCode = generateReferralCode();
-        user.invitationLimit = 999; // Admin has high invite limit
+        user.invitationLimit = 5;
+
         return true;
-      }
-
-      // New user - check for invite code
-      let inviteCode = null;
-
-      // Check credentials for invite code
-      if (
-        credentials &&
-        typeof credentials === "object" &&
-        "inviteCode" in credentials
-      ) {
-        inviteCode = credentials.inviteCode as string;
-      }
-
-      // Check query params (from URL) for invite code
-      if (
-        !inviteCode &&
-        credentials?.query &&
-        typeof credentials.query === "object"
-      ) {
-        const query = credentials.query as Record<string, unknown>;
-        if ("inviteCode" in query && typeof query.inviteCode === "string") {
-          inviteCode = query.inviteCode;
-        }
-      }
-
-      // Check cookies for invite code
-      if (
-        !inviteCode &&
-        credentials?.cookies &&
-        typeof credentials.cookies === "object"
-      ) {
-        const cookies = credentials.cookies as Record<string, unknown>;
-        if (
-          "next-auth.invite-code" in cookies &&
-          typeof cookies["next-auth.invite-code"] === "string"
-        ) {
-          inviteCode = cookies["next-auth.invite-code"];
-        }
-      }
-
-      if (!inviteCode) {
-        // No invite code provided for new user
-        return `/auth/invite-required`;
-      }
-
-      // Verify invite code
-      const inviter = await db.user.findUnique({
-        where: { referralCode: inviteCode },
-      });
-
-      if (!inviter) {
-        // Invalid invite code
-        return `/auth/invalid-invite`;
-      }
-
-      // Check if inviter has reached their invitation limit
-      const invitesSent = await db.user.count({
-        where: { referredById: inviter.id },
-      });
-
-      if (invitesSent >= inviter.invitationLimit) {
-        // Inviter has reached their limit
-        return `/auth/invite-limit-reached`;
-      }
-
-      // Store the inviter ID and generate a new referral code
-      user.referredById = inviter.id;
-      user.referralCode = generateReferralCode();
-      user.invitationLimit = 5; // Default invitation limit
-
-      return true;
+      },
+      async session({ session, user }) {
+        return {
+          ...session,
+          user: {
+            ...session.user,
+            id: user.id,
+            referralCode: user.referralCode ?? "",
+            invitationLimit: user.invitationLimit ?? 5,
+          },
+        };
+      },
+      authorized({ auth, request }) {
+        console.log({ auth, request });
+        return true;
+      },
     },
-    async session({ session, user }) {
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: user.id,
-          referralCode: user.referralCode ?? "",
-          invitationLimit: user.invitationLimit ?? 5,
-        },
-      };
+
+    pages: {
+      signIn: "/auth/signin",
+      error: "/auth/error",
     },
-  },
 
-  pages: {
-    signIn: "/auth/signin",
-    error: "/auth/error",
-  },
-
-  debug: process.env.NODE_ENV === "development",
-} satisfies NextAuthConfig;
+    debug: process.env.NODE_ENV === "development",
+  }) satisfies NextAuthConfig;

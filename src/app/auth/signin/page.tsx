@@ -8,6 +8,7 @@ import Header from "~/app/_components/header";
 import Footer from "~/app/_components/footer";
 import { api } from "~/trpc/react";
 import Link from "next/link";
+import Cookies from "js-cookie";
 
 export default function SignInPage() {
   const searchParams = useSearchParams();
@@ -62,7 +63,7 @@ export default function SignInPage() {
     }
   }, [inviteValidation, isValidating, isError, inviteCodeInput]);
 
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     // Reset any previous errors
     setTermsError(null);
 
@@ -74,20 +75,29 @@ export default function SignInPage() {
       return;
     }
 
-    // Store invite code to be accessible during auth flow
+    // NextAuth'un doğrudan parametresi olarak davet kodunu ilet
     if (inviteCodeInput) {
-      // Store in sessionStorage for client-side access
-      sessionStorage.setItem("inviteCode", inviteCodeInput);
+      console.log("Sending invite code to NextAuth:", inviteCodeInput);
 
-      // Set a cookie that can be read server-side during auth
-      document.cookie = `next-auth.invite-code=${inviteCodeInput}; path=/; max-age=3600; SameSite=Lax`;
+      Cookies.set("inviteCode", inviteCodeInput, {
+        expires: 1 / 288,
+        path: "/",
+        secure: true,
+        sameSite: "lax",
+      });
+
+      // OAuth sağlayıcıya yönlendir - callback URL'de davet kodu var
+      void signIn("google", {
+        callbackUrl,
+        redirect: true,
+      });
+    } else {
+      // Davet kodu yoksa normal giriş
+      void signIn("google", {
+        callbackUrl,
+        redirect: true,
+      });
     }
-
-    void signIn("google", {
-      callbackUrl,
-      // Pass directly in query parameters as well
-      inviteCode: inviteCodeInput,
-    });
   };
 
   return (
