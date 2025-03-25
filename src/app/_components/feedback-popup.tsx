@@ -27,7 +27,6 @@ export default function FeedbackPopup({ isOpen, onClose }: FeedbackPopupProps) {
       setSubmitting(false);
       setSuccess(true);
 
-      // Formu sıfırla
       setTimeout(() => {
         setTitle("");
         setContent("");

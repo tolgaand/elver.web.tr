@@ -13,7 +13,6 @@ export const feedbackRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        // Geri bildirim oluştur
         const feedback = await ctx.db.feedback.create({
           data: {
             title: input.title,

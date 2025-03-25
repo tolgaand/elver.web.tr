@@ -54,9 +54,7 @@ export default function LocationPermissionWrapper({
   }, [locationPermissionGranted]);
 
   useEffect(() => {
-    // Tarayıcı tarafında çalıştığımızdan emin ol
     if (typeof window !== "undefined" && navigator.geolocation) {
-      // Konum izninin durumunu kontrol et
       if ("permissions" in navigator) {
         navigator.permissions
           .query({ name: "geolocation" })
@@ -67,17 +65,14 @@ export default function LocationPermissionWrapper({
             setLoading(false);
           })
           .catch(() => {
-            // Permissions API desteklenmiyorsa kullanıcıdan manuel olarak izin iste
             setLoading(false);
           });
       } else {
-        // Permissions API desteklenmiyorsa doğrudan getCurrentPosition'ı çağırarak izin kontrolü yap
         setLoading(false);
       }
     } else {
-      // Tarayıcı geolocation desteklemiyorsa
       setLoading(false);
-      setLocationPermissionGranted(true); // Geolocation desteklenmeyen ortamlarda sayfayı göster
+      setLocationPermissionGranted(true);
     }
   }, []);
 
@@ -86,7 +81,6 @@ export default function LocationPermissionWrapper({
   };
 
   if (loading) {
-    // Sayfa yüklenirken boş bir yükleme ekranı göster
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="border-primary-200 border-t-primary-600 h-12 w-12 animate-spin rounded-full border-4"></div>

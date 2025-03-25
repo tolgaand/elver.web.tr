@@ -22,7 +22,6 @@ declare module "next-auth" {
       id: string;
       referralCode: string;
       invitationLimit: number;
-      // ...other properties
     } & DefaultSession["user"];
   }
 
@@ -52,15 +51,12 @@ export const authConfig = (req: NextRequest) =>
     },
     callbacks: {
       async signIn({ user }) {
-        // Davet kodu sadece cookie'den alınıyor
         const cookieInviteCode = req.cookies.get("inviteCode");
 
-        // Email kontrolü
         if (!user.email) {
           return false;
         }
 
-        // Mevcut kullanıcı kontrolü - giriş yapabilir
         const existingUser = await db.user.findUnique({
           where: { email: user.email },
         });
@@ -69,21 +65,18 @@ export const authConfig = (req: NextRequest) =>
           return true;
         }
 
-        // Admin özel hesabı
         if (user.email === "tolgababa21@gmail.com") {
           user.referralCode = generateReferralCode();
           user.invitationLimit = 999;
           return true;
         }
 
-        // Davet kodu yoksa reddet
         if (!cookieInviteCode) {
           return `/auth/invite-required`;
         }
 
         const inviteCode = cookieInviteCode.value;
 
-        // Davet kodu kontrolü
         const inviter = await db.user.findUnique({
           where: { referralCode: inviteCode },
         });
@@ -92,7 +85,6 @@ export const authConfig = (req: NextRequest) =>
           return `/auth/invalid-invite`;
         }
 
-        // Davet limitini kontrol et
         const invitesSent = await db.user.count({
           where: { referredById: inviter.id },
         });
@@ -101,7 +93,6 @@ export const authConfig = (req: NextRequest) =>
           return `/auth/invite-limit-reached`;
         }
 
-        // Kullanıcıyı kaydet
         user.referredById = inviter.id;
         user.referralCode = generateReferralCode();
         user.invitationLimit = 5;

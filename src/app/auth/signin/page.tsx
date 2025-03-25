@@ -22,7 +22,6 @@ export default function SignInPage() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [termsError, setTermsError] = useState<string | null>(null);
 
-  // Validate invite code if one is provided in the URL
   const {
     data: inviteValidation,
     isLoading: isValidating,
@@ -35,7 +34,6 @@ export default function SignInPage() {
     },
   );
 
-  // Update status when validation result changes
   useEffect(() => {
     if (!inviteCodeInput) {
       setInviteStatus(null);
@@ -64,10 +62,8 @@ export default function SignInPage() {
   }, [inviteValidation, isValidating, isError, inviteCodeInput]);
 
   const handleSignIn = async () => {
-    // Reset any previous errors
     setTermsError(null);
 
-    // İşlem için kullanıcının kuralları kabul etmesi gerekiyor
     if (!acceptTerms) {
       setTermsError(
         "Lütfen topluluk kurallarını ve gizlilik politikasını kabul edin.",
@@ -75,7 +71,6 @@ export default function SignInPage() {
       return;
     }
 
-    // NextAuth'un doğrudan parametresi olarak davet kodunu ilet
     if (inviteCodeInput) {
       console.log("Sending invite code to NextAuth:", inviteCodeInput);
 
@@ -86,13 +81,11 @@ export default function SignInPage() {
         sameSite: "lax",
       });
 
-      // OAuth sağlayıcıya yönlendir - callback URL'de davet kodu var
       void signIn("google", {
         callbackUrl,
         redirect: true,
       });
     } else {
-      // Davet kodu yoksa normal giriş
       void signIn("google", {
         callbackUrl,
         redirect: true,

@@ -22,7 +22,7 @@ enum TimeoutOption {
   MINUTES_30 = "30",
   MINUTES_45 = "45",
   MINUTES_60 = "60",
-  MINUTES_90 = "90", // Maksimum 1.5 saat
+  MINUTES_90 = "90",
 }
 
 export default function IhtiyacimVarPage() {
@@ -36,16 +36,15 @@ export default function IhtiyacimVarPage() {
   const [contactDetail, setContactDetail] = useState("");
   const [timeout, setTimeout] = useState<TimeoutOption>(
     TimeoutOption.MINUTES_30,
-  ); // Varsayılan 30 dakika
+  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  // Create need post mutation
   const createNeedPost = api.needPost.create.useMutation({
     onSuccess: (data) => {
       setSubmitting(false);
-      // Redirect to need post detail page
+
       router.push(`/ilanlar/ihtiyac/${data.needPost.id}`);
     },
     onError: (error) => {
@@ -54,7 +53,6 @@ export default function IhtiyacimVarPage() {
     },
   });
 
-  // All contact methods require contact detail input
   const showContactDetailInput = true;
 
   const handleContactMethodChange = (
@@ -62,7 +60,7 @@ export default function IhtiyacimVarPage() {
   ) => {
     const newContactMethod = e.target.value as ContactPreference;
     setContactMethod(newContactMethod);
-    // Clear contact detail when switching methods
+
     setContactDetail("");
   };
 
@@ -110,9 +108,7 @@ export default function IhtiyacimVarPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Check if user is authenticated first
     if (status !== "authenticated") {
-      // Show login popup if not authenticated
       setShowAuthModal(true);
       return;
     }
@@ -120,14 +116,12 @@ export default function IhtiyacimVarPage() {
     setError(null);
     setSubmitting(true);
 
-    // Basic validation for contact details
     if (!contactDetail) {
       setError("İletişim bilgisi girilmelidir");
       setSubmitting(false);
       return;
     }
 
-    // Validate based on contact method
     if (contactMethod === ContactPreference.PHONE) {
       if (!/^\+?[0-9]{10,15}$/.test(contactDetail)) {
         setError("Geçerli bir telefon numarası giriniz");
@@ -151,7 +145,6 @@ export default function IhtiyacimVarPage() {
       }
     }
 
-    // Format social media handles to include @ if missing
     let formattedContactDetail = contactDetail;
     if (
       (contactMethod === ContactPreference.INSTAGRAM ||
@@ -162,11 +155,9 @@ export default function IhtiyacimVarPage() {
       formattedContactDetail = "@" + formattedContactDetail;
     }
 
-    // Get user's location from browser
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          // Form submission with location data
           createNeedPost.mutate({
             title,
             description,

@@ -24,7 +24,6 @@ const AuthModal = forwardRef<AuthModalRef, AuthModalProps>(
     const [acceptTerms, setAcceptTerms] = useState(false);
     const [termsError, setTermsError] = useState<string | null>(null);
 
-    // Props değiştiğinde state'i güncelle
     if (isOpen !== open) {
       setOpen(isOpen);
     }
@@ -37,7 +36,6 @@ const AuthModal = forwardRef<AuthModalRef, AuthModalProps>(
       try {
         setTermsError(null);
 
-        // Kullanıcı kuralları kabul etmeden işleme devam edemez
         if (!acceptTerms) {
           setTermsError(
             "Topluluk kurallarını ve gizlilik politikasını kabul etmeniz gerekmektedir.",

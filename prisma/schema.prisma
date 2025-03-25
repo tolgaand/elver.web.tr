@@ -38,11 +38,11 @@ model User {
     email             String?   @unique
     name              String?
     surname           String?
-    image             String?   // NextAuth image field
-    emailVerified     DateTime? // NextAuth emailVerified field
+    image             String?
+    emailVerified     DateTime?
     role              UserRole  @default(USER)
-    status            UserStatus @default(ACTIVE) // Default to ACTIVE for Google Auth
-    verified          Boolean   @default(true)    // Google Auth users are verified by default
+    status            UserStatus @default(ACTIVE)
+    verified          Boolean   @default(true)
     createdAt         DateTime  @default(now())
     updatedAt         DateTime  @updatedAt
     lastLoginAt       DateTime?
@@ -50,25 +50,25 @@ model User {
     lastLocationLng   Float?
     lastLocationTime  DateTime?
     
-    // Referral system
-    referralCode      String    @unique // Kullanıcının benzersiz davet kodu
+
+    referralCode      String    @unique
     referredBy        User?     @relation("UserReferrals", fields: [referredById], references: [id], onDelete: Restrict, onUpdate: Restrict)
     referredById      String?
     referrals         User[]    @relation("UserReferrals")
-    invitationLimit   Int       @default(5) // Bir kullanıcının yapabileceği maksimum davet sayısı
+    invitationLimit   Int       @default(5)
     
-    // Daily post limits
-    dailyPostLimit    Int       @default(3)  // Günlük açılabilecek ilan sayısı
-    dailyPostCount    Int       @default(0)  // Günlük açılan ilan sayısı
-    lastPostCountReset DateTime? // Son sayaç sıfırlama tarihi
+
+    dailyPostLimit    Int       @default(3)
+    dailyPostCount    Int       @default(0)
+    lastPostCountReset DateTime?
     
-    // Relations
+
     needPosts         NeedPost[]
     helpPosts         HelpPost[]
     helpOffers        HelpOffer[]
     accounts          Account[]
     sessions          Session[]
-    feedbacks         Feedback[]  // Kullanıcı geri bildirimleri
+    feedbacks         Feedback[]
 
     @@index([phone])
     @@index([email])
@@ -81,12 +81,12 @@ model Account {
     type                     String
     provider                 String
     providerAccountId        String
-    refresh_token            String? // @db.Text
-    access_token             String? // @db.Text
+    refresh_token            String?
+    access_token             String?
     expires_at               Int?
     token_type               String?
     scope                    String?
-    id_token                 String? // @db.Text
+    id_token                 String?
     session_state            String?
     user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
     refresh_token_expires_in Int?
@@ -120,7 +120,7 @@ model Category {
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
     
-    // Relations
+
     needPosts   NeedPost[]
     helpPosts   HelpPost[]
     subCategories SubCategory[]
@@ -135,7 +135,7 @@ model SubCategory {
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
     
-    // Relations
+
     category     Category @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
     categoryId   String
     needPosts    NeedPost[]
@@ -152,7 +152,7 @@ model Tag {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
     
-    // Relations
+
     needPosts NeedPostTag[]
     helpPosts HelpPostTag[]
 }
@@ -171,10 +171,10 @@ model NeedPost {
     contactDetail String?
     createdAt     DateTime     @default(now())
     updatedAt     DateTime     @updatedAt
-    expiresAt     DateTime    // İhtiyaç ilanının zaman aşımına uğrayacağı tarih
-    isExpired     Boolean      @default(false) // İlanın zaman aşımına uğrayıp uğramadığını belirten alan
+    expiresAt     DateTime
+    isExpired     Boolean      @default(false)
     
-    // Relations
+
     user          User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
     userId        String
     category      Category     @relation(fields: [categoryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
@@ -200,7 +200,7 @@ model HelpPost {
     createdAt     DateTime     @default(now())
     updatedAt     DateTime     @updatedAt
     
-    // Relations
+
     user          User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
     userId        String
     category      Category     @relation(fields: [categoryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
@@ -217,7 +217,7 @@ model HelpOffer {
     createdAt   DateTime   @default(now())
     updatedAt   DateTime   @updatedAt
     
-    // Relations
+
     user        User       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
     userId      String
     needPost    NeedPost   @relation(fields: [needPostId], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -246,14 +246,14 @@ model HelpPostTag {
 // Kullanıcı önerileri ve geri bildirimleri
 model Feedback {
     id          String   @id @default(cuid())
-    type        String   // "SUGGESTION", "BUG", "FEATURE", "OTHER"
+    type        String
     title       String
     content     String
-    status      String   @default("PENDING") // "PENDING", "REVIEWED", "IMPLEMENTED", "REJECTED"
+    status      String   @default("PENDING")
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
     
-    // İlişkiler
+
     user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId      String
     

@@ -15,7 +15,6 @@ interface DefaultIconPrototype extends L.Icon.Default {
 }
 
 const fixIcons = () => {
-  // Tip tanımını kullanarak güvenli erişim sağla
   delete (L.Icon.Default.prototype as DefaultIconPrototype)._getIconUrl;
 
   L.Icon.Default.mergeOptions({
@@ -42,7 +41,6 @@ function MapCenterController({ markers }: { markers: NeedMarker[] }) {
   useEffect(() => {
     if (!map || markers.length === 0) return;
 
-    // Haritayı uygun boyuta getir
     if (markers.length === 1) {
       const marker = markers[0];
       if (
@@ -81,7 +79,6 @@ export default function ActiveNeedsMap() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const router = useRouter();
 
-  // Aktif ihtiyaçları getir
   const { data: activeNeeds, refetch } = api.needPost.getActiveNeeds.useQuery(
     undefined,
     {
@@ -90,7 +87,6 @@ export default function ActiveNeedsMap() {
     },
   );
 
-  // 10 saniyede bir yenile
   useEffect(() => {
     if (status === "authenticated") {
       const interval = setInterval(() => {
@@ -101,13 +97,10 @@ export default function ActiveNeedsMap() {
     }
   }, [status, refetch]);
 
-  // Client tarafında çalıştır ve iconları düzelt
   useEffect(() => {
-    // Leaflet iconlarını düzelt
     fixIcons();
     setMounted(true);
 
-    // Marker verilerini güncelle
     if (activeNeeds && Array.isArray(activeNeeds)) {
       const validNeeds = activeNeeds.filter(
         (need) =>
@@ -166,7 +159,7 @@ export default function ActiveNeedsMap() {
     <div className="w-full" style={{ height: "500px", minHeight: "400px" }}>
       {typeof window !== "undefined" && markers.length > 0 && (
         <MapContainer
-          center={[39.925533, 32.866287]} // Türkiye merkezi
+          center={[39.925533, 32.866287]}
           zoom={6}
           style={{ height: "100%", width: "100%", borderRadius: "0.5rem" }}
         >

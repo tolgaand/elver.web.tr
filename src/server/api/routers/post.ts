@@ -9,7 +9,4 @@ export const postRouter = createTRPCRouter({
         greeting: `Hello ${input.text}`,
       };
     }),
-
-  // Örnek örnek metodunu kaldırdım çünkü post tablosu yok
-  // Sadece hello endpointi korundu
 });

@@ -18,12 +18,12 @@ export async function GET(request: NextRequest) {
     const result = await db.needPost.updateMany({
       where: {
         expiresAt: {
-          lt: new Date(), // Şu andan önce sona eren ilanlar
+          lt: new Date(),
         },
-        isExpired: false, // Henüz zaman aşımına uğramamış olanlar
+        isExpired: false,
       },
       data: {
-        isExpired: true, // Zaman aşımına uğradı olarak işaretle
+        isExpired: true,
       },
     });
 

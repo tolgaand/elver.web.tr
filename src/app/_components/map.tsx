@@ -12,7 +12,6 @@ interface DefaultIconPrototype extends L.Icon.Default {
 
 // En basit çözüm: CDN üzerinden doğrudan hazır iconları kullan
 const fixIcons = () => {
-  // Tip tanımını kullanarak güvenli erişim sağla
   delete (L.Icon.Default.prototype as DefaultIconPrototype)._getIconUrl;
 
   L.Icon.Default.mergeOptions({
@@ -36,16 +35,13 @@ export default function Map({
   zoom = 14,
   height = "400px",
 }: MapProps) {
-  // Client tarafında olduğumuzdan emin olalım
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Sadece client tarafında çalıştır
     fixIcons();
     setMounted(true);
   }, []);
 
-  // Render edilecek içerik
   if (!mounted) {
     return (
       <div

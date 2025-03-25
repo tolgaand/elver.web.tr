@@ -46,7 +46,6 @@ export const authRouter = createTRPCRouter({
       });
     }
 
-    // If the user doesn't have a referral code yet, generate one
     if (!user.referralCode) {
       const referralCode = generateReferralCode();
 
@@ -54,7 +53,7 @@ export const authRouter = createTRPCRouter({
         where: { id: userId },
         data: {
           referralCode,
-          invitationLimit: user.invitationLimit || 5, // Ensure they have an invitation limit
+          invitationLimit: user.invitationLimit || 5,
         },
       });
 
@@ -70,7 +69,6 @@ export const authRouter = createTRPCRouter({
   getInvitationStats: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
 
-    // Get user with invitation limit
     const user = await ctx.db.user.findUnique({
       where: { id: userId },
       select: {
@@ -86,7 +84,6 @@ export const authRouter = createTRPCRouter({
       });
     }
 
-    // If user doesn't have a referral code, generate one
     let referralCode = user.referralCode;
     if (!referralCode) {
       referralCode = generateReferralCode();
@@ -99,7 +96,6 @@ export const authRouter = createTRPCRouter({
       });
     }
 
-    // Count number of users referred by this user
     const referredCount = await ctx.db.user.count({
       where: { referredById: userId },
     });
@@ -112,21 +108,17 @@ export const authRouter = createTRPCRouter({
     };
   }),
 
-  // Validate invitation code
   validateInviteCode: publicProcedure
     .input(z.object({ code: z.string() }))
     .query(async ({ ctx, input }) => {
-      // Skip validation for empty codes
       if (!input.code) {
         return { valid: false, reason: "EMPTY_CODE" };
       }
 
-      // Validate code format - must start with REF
       if (!input.code.startsWith("REF")) {
         return { valid: false, reason: "INVALID_FORMAT" };
       }
 
-      // Find the inviter by referral code
       const inviter = await ctx.db.user.findUnique({
         where: { referralCode: input.code },
         select: {
@@ -139,7 +131,6 @@ export const authRouter = createTRPCRouter({
         return { valid: false, reason: "INVALID_CODE" };
       }
 
-      // Check if the inviter has reached their limit
       const invitesSent = await ctx.db.user.count({
         where: { referredById: inviter.id },
       });

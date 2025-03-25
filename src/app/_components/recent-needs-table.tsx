@@ -11,7 +11,6 @@ export default function RecentNeedsTable() {
   const [isClient, setIsClient] = useState(false);
   const [now, setNow] = useState(new Date());
 
-  // Son ihtiyaçları getir
   const { data: needPosts, refetch } = api.needPost.getActiveNeeds.useQuery(
     undefined,
     {
@@ -20,7 +19,6 @@ export default function RecentNeedsTable() {
     },
   );
 
-  // 10 saniyede bir yenile ve şimdiki zamanı güncelle
   useEffect(() => {
     const interval = setInterval(() => {
       void refetch();
@@ -30,18 +28,15 @@ export default function RecentNeedsTable() {
     return () => clearInterval(interval);
   }, [refetch]);
 
-  // Client-side rendering için
   useEffect(() => {
     setIsClient(true);
     setNow(new Date());
   }, []);
 
-  // İhtiyaç detayına gitmek için
   const handleViewDetails = (id: string) => {
     router.push(`/ilanlar/ihtiyac/${id}`);
   };
 
-  // Tarih formatla
   const formatDate = (date: Date) => {
     try {
       return formatDistanceToNow(new Date(date), {
@@ -53,7 +48,6 @@ export default function RecentNeedsTable() {
     }
   };
 
-  // İlanın kalan süresini hesapla ve yüzde olarak döndür
   const calculateRemainingTimePercentage = (
     createdAt: Date,
     expiresAt: Date | null,
@@ -65,31 +59,25 @@ export default function RecentNeedsTable() {
       const expires = new Date(expiresAt);
       const current = now;
 
-      // Eğer zaten süresi dolmuşsa
       if (current > expires) return 100;
 
-      // Toplam ilan süresi (ms cinsinden)
       const totalDuration = differenceInMilliseconds(expires, created);
 
-      // Geçen süre (ms cinsinden)
       const elapsedTime = differenceInMilliseconds(current, created);
 
-      // Geçen zamanın yüzdesi
       const percentage = (elapsedTime / totalDuration) * 100;
 
-      // 0-100 arasında sınırla
       return Math.min(Math.max(percentage, 0), 100);
     } catch {
       return 0;
     }
   };
 
-  // Kalan süreye göre renk belirle
   const getTimeBarColor = (percentage: number) => {
-    if (percentage >= 90) return "bg-red-500"; // %90 ve üzeri - kırmızı
-    if (percentage >= 70) return "bg-orange-500"; // %70 ve üzeri - turuncu
-    if (percentage >= 50) return "bg-yellow-500"; // %50 ve üzeri - sarı
-    return "bg-green-500"; // %50 altı - yeşil
+    if (percentage >= 90) return "bg-red-500";
+    if (percentage >= 70) return "bg-orange-500";
+    if (percentage >= 50) return "bg-yellow-500";
+    return "bg-green-500";
   };
 
   if (!isClient) {
@@ -135,7 +123,6 @@ export default function RecentNeedsTable() {
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">
             {needPosts && needPosts.length > 0 ? (
-              // Son 5 ilanı göster
               needPosts.slice(0, 5).map((post) => (
                 <tr key={post.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">

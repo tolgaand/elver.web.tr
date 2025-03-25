@@ -5,14 +5,10 @@ import { type ReactNode } from "react";
 
 interface AuthConsumerProps {
   children: ReactNode;
-  requireAuth?: boolean; // Eğer true ise, oturum açılmamışsa içerik gizlenir
-  redirectTo?: string; // Oturum açılmamışsa yönlendirilecek sayfa
+  requireAuth?: boolean;
+  redirectTo?: string;
 }
 
-/**
- * Kullanıcının oturum durumunu kontrol eden ve duruma göre uygun içeriği gösteren bileşen.
- * useSession loading durumundayken, spinner gösterilir.
- */
 export default function AuthConsumer({
   children,
   requireAuth = false,
@@ -20,7 +16,6 @@ export default function AuthConsumer({
 }: AuthConsumerProps) {
   const { status } = useSession();
 
-  // Oturum durumu yüklenirken spinner göster
   if (status === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -29,17 +24,13 @@ export default function AuthConsumer({
     );
   }
 
-  // Eğer oturum açılması gerekiyorsa ve oturum açılmamışsa,
-  // uygun sayfaya yönlendir (client-side redirect)
   if (requireAuth && status === "unauthenticated") {
     if (typeof window !== "undefined" && redirectTo) {
       window.location.href = redirectTo;
     }
 
-    // Yönlendirme yapılırken içeriği gizle
     return null;
   }
 
-  // Normal durumlarda içeriği göster
   return <>{children}</>;
 }

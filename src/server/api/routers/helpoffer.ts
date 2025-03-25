@@ -14,7 +14,6 @@ export const helpOfferRouter = createTRPCRouter({
       const { needPostId, message } = input;
       const userId = ctx.session.user.id;
 
-      // Check if need post exists
       const needPost = await ctx.db.needPost.findUnique({
         where: { id: needPostId },
       });
@@ -26,7 +25,6 @@ export const helpOfferRouter = createTRPCRouter({
         });
       }
 
-      // Check if user already has an active offer for this post
       const existingOffer = await ctx.db.helpOffer.findFirst({
         where: {
           needPostId,
@@ -41,7 +39,6 @@ export const helpOfferRouter = createTRPCRouter({
         });
       }
 
-      // Create the help offer
       const helpOffer = await ctx.db.helpOffer.create({
         data: {
           message,
@@ -56,7 +53,6 @@ export const helpOfferRouter = createTRPCRouter({
       };
     }),
 
-  // Get help offers created by the current user
   getMyOffers: protectedProcedure.query(async ({ ctx }) => {
     const offers = await ctx.db.helpOffer.findMany({
       where: {

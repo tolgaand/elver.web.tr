@@ -13,7 +13,6 @@ const ContactMethodEnum = z.enum(["phone", "email", "instagram", "telegram"]);
 const TimeoutEnum = z.enum(["15", "30", "45", "60", "90"]);
 
 export const needPostRouter = createTRPCRouter({
-  // Create a new need post
   create: protectedProcedure
     .input(
       z.object({
@@ -24,11 +23,10 @@ export const needPostRouter = createTRPCRouter({
         locationLat: z.number().min(-90).max(90),
         locationLng: z.number().min(-180).max(180),
         locationName: z.string().optional(),
-        timeout: TimeoutEnum, // İlan timeout süresi (dakika)
+        timeout: TimeoutEnum,
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Check if contact detail is provided when needed
       if (!input.contactDetail) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -36,9 +34,7 @@ export const needPostRouter = createTRPCRouter({
         });
       }
 
-      // Validate the contact detail according to the method
       if (input.contactMethod === "phone") {
-        // Simple phone validation - you might want to use a more sophisticated validation
         if (!/^\+?[0-9]{10,15}$/.test(input.contactDetail)) {
           throw new TRPCError({
             code: "BAD_REQUEST",
@@ -46,7 +42,6 @@ export const needPostRouter = createTRPCRouter({
           });
         }
       } else if (input.contactMethod === "email") {
-        // Email validation using zod
         try {
           z.string().email().parse(input.contactDetail);
         } catch (error) {
@@ -59,7 +54,6 @@ export const needPostRouter = createTRPCRouter({
         input.contactMethod === "instagram" ||
         input.contactMethod === "telegram"
       ) {
-        // Basic username validation for social media
         if (!/^@?[a-zA-Z0-9_.]{1,30}$/.test(input.contactDetail)) {
           throw new TRPCError({
             code: "BAD_REQUEST",
@@ -67,7 +61,6 @@ export const needPostRouter = createTRPCRouter({
           });
         }
 
-        // Add @ if not present
         if (
           !input.contactDetail.startsWith("@") &&
           input.contactDetail.length > 0
@@ -77,7 +70,6 @@ export const needPostRouter = createTRPCRouter({
       }
 
       try {
-        // Günlük ilan limitini kontrol et
         const user = await ctx.db.user.findUnique({
           where: { id: ctx.session.user.id },
           select: {
@@ -101,7 +93,6 @@ export const needPostRouter = createTRPCRouter({
           now.getDate(),
         );
 
-        // Kullanıcının limiti reset edilmeli mi?
         let resetCount = false;
         if (
           !user.lastPostCountReset ||
@@ -110,7 +101,6 @@ export const needPostRouter = createTRPCRouter({
           resetCount = true;
         }
 
-        // Günlük limit kontrol
         if (!resetCount && user.dailyPostCount >= user.dailyPostLimit) {
           throw new TRPCError({
             code: "FORBIDDEN",
@@ -118,7 +108,6 @@ export const needPostRouter = createTRPCRouter({
           });
         }
 
-        // Get the "Diğer" category as default
         const defaultCategory = await ctx.db.category.findFirst({
           where: { slug: "others" },
         });
@@ -130,7 +119,6 @@ export const needPostRouter = createTRPCRouter({
           });
         }
 
-        // Create the need post
         const needPost = await ctx.db.needPost.create({
           data: {
             title: input.title,
@@ -140,20 +128,19 @@ export const needPostRouter = createTRPCRouter({
             locationLat: input.locationLat,
             locationLng: input.locationLng,
             locationName: input.locationName,
-            // timeout değerinden expiresAt hesapla
+
             expiresAt: new Date(
               Date.now() + parseInt(input.timeout) * 60 * 1000,
             ),
-            // Default values
+
             isUrgent: false,
             isAnonymous: false,
-            // Relations
+
             userId: ctx.session.user.id,
             categoryId: defaultCategory.id,
           },
         });
 
-        // Kullanıcının günlük ilan sayacını güncelle
         await ctx.db.user.update({
           where: { id: ctx.session.user.id },
           data: {
@@ -175,7 +162,6 @@ export const needPostRouter = createTRPCRouter({
       }
     }),
 
-  // Get all need posts with pagination
   getAll: publicProcedure
     .input(
       z.object({
@@ -216,7 +202,6 @@ export const needPostRouter = createTRPCRouter({
       };
     }),
 
-  // Get a specific need post by ID
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -259,17 +244,12 @@ export const needPostRouter = createTRPCRouter({
         });
       }
 
-      // Check if user has access to this post
       const userHasAccess =
-        // Public post
         !post.isAnonymous ||
-        // User is the owner
         (ctx.session?.user?.id !== undefined &&
           post.userId === ctx.session.user.id) ||
-        // User has an active offer on this post
         post.helpOffers.length > 0;
 
-      // Remove contact details if user doesn't have access
       if (!userHasAccess) {
         post.contactMethod = null;
         post.contactDetail = null;
@@ -278,7 +258,6 @@ export const needPostRouter = createTRPCRouter({
       return post;
     }),
 
-  // Get need posts created by the current user
   getMyPosts: protectedProcedure.query(async ({ ctx }) => {
     const posts = await ctx.db.needPost.findMany({
       where: {
@@ -301,14 +280,13 @@ export const needPostRouter = createTRPCRouter({
     return posts;
   }),
 
-  // Get all active needs (those with status PENDING or INPROGRESS)
   getActiveNeeds: publicProcedure.query(async ({ ctx }) => {
     const posts = await ctx.db.needPost.findMany({
       where: {
         status: {
           in: ["PENDING", "INPROGRESS"],
         },
-        isExpired: false, // Zaman aşımına uğramamış ilanları getir
+        isExpired: false,
       },
       orderBy: {
         createdAt: "desc",
@@ -323,14 +301,13 @@ export const needPostRouter = createTRPCRouter({
         locationLat: true,
         locationLng: true,
         createdAt: true,
-        expiresAt: true, // Zaman aşımı bilgisini ekle
+        expiresAt: true,
       },
     });
 
     return posts;
   }),
 
-  // Update need post status
   updateStatus: protectedProcedure
     .input(
       z.object({
@@ -341,7 +318,6 @@ export const needPostRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { id, status } = input;
 
-      // Check if the post exists and belongs to the user
       const post = await ctx.db.needPost.findFirst({
         where: {
           id,
@@ -356,13 +332,11 @@ export const needPostRouter = createTRPCRouter({
         });
       }
 
-      // Update the post status
       const updatedPost = await ctx.db.needPost.update({
         where: { id },
         data: { status },
       });
 
-      // If completing the post, also complete all active help offers
       if (status === "COMPLETED") {
         await ctx.db.helpOffer.updateMany({
           where: {

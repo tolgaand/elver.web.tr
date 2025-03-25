@@ -6,7 +6,6 @@ async function main() {
   console.log("Starting database seeding...");
 
   try {
-    // Clear existing data
     await db.helpPostTag.deleteMany();
     await db.needPostTag.deleteMany();
     await db.helpOffer.deleteMany();
@@ -19,7 +18,6 @@ async function main() {
 
     console.log("Cleared existing data");
 
-    // Seed Categories
     const categories = [
       {
         name: "Temel İhtiyaçlar",
@@ -79,7 +77,6 @@ async function main() {
 
     console.log("Categories seeded");
 
-    // Seed Tags
     const tags = [
       { name: "Acil", value: "urgent" },
       { name: "Çocuklar İçin", value: "for-children" },
@@ -99,13 +96,11 @@ async function main() {
 
     console.log("Tags seeded");
 
-    // Get the "Diğer" category to add subcategories
     const otherCategory = await db.category.findFirst({
       where: { slug: "others" },
     });
 
     if (otherCategory) {
-      // Seed some SubCategories for the "Diğer" category
       const subCategories = [
         {
           name: "Diğer Hizmetler",

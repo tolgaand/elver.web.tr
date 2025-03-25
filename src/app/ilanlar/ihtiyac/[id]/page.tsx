@@ -99,16 +99,14 @@ export default function NeedPostDetailPage() {
   const [submittingOffer, setSubmittingOffer] = useState(false);
   const [now, setNow] = useState(new Date());
 
-  // Periyodik olarak şimdiki zamanı güncelle
   useEffect(() => {
     const interval = setInterval(() => {
       setNow(new Date());
-    }, 10000); // Her 10 saniyede bir güncelle
+    }, 10000);
 
     return () => clearInterval(interval);
   }, []);
 
-  // İlanın kalan süresini hesapla ve yüzde olarak döndür
   const calculateRemainingTimePercentage = (
     createdAt: Date | string | null | undefined,
     expiresAt: Date | string | null | undefined,
@@ -120,40 +118,31 @@ export default function NeedPostDetailPage() {
 
     const current = now;
 
-    // Eğer zaten süresi dolmuşsa
     if (current > parsedExpiresAt) return 100;
 
-    // Toplam ilan süresi (ms cinsinden)
     const totalDuration = differenceInMilliseconds(
       parsedExpiresAt,
       parsedCreatedAt,
     );
 
-    // Geçen süre (ms cinsinden)
     const elapsedTime = differenceInMilliseconds(current, parsedCreatedAt);
 
-    // Geçen zamanın yüzdesi
     const percentage = (elapsedTime / totalDuration) * 100;
 
-    // 0-100 arasında sınırla
     return Math.min(Math.max(percentage, 0), 100);
   };
 
-  // Kalan süreye göre renk belirle
   const getTimeBarColor = (percentage: number) => {
-    if (percentage >= 90) return "bg-red-500"; // %90 ve üzeri - kırmızı
-    if (percentage >= 70) return "bg-orange-500"; // %70 ve üzeri - turuncu
-    if (percentage >= 50) return "bg-yellow-500"; // %50 ve üzeri - sarı
-    return "bg-green-500"; // %50 altı - yeşil
+    if (percentage >= 90) return "bg-red-500";
+    if (percentage >= 70) return "bg-orange-500";
+    if (percentage >= 50) return "bg-yellow-500";
+    return "bg-green-500";
   };
 
-  // Check if user is authenticated
   const isAuthenticated = status === "authenticated";
 
-  // Function to trigger sign in
   const showLogin = () => void signIn();
 
-  // Fetch need post details
   const {
     data: post,
     isLoading,
@@ -165,12 +154,11 @@ export default function NeedPostDetailPage() {
     },
   );
 
-  // Create help offer mutation
   const createHelpOffer = api.helpOffer.create.useMutation({
     onSuccess: () => {
       setSubmittingOffer(false);
       setOfferMessage("");
-      // Refetch post data
+
       window.location.reload();
     },
     onError: (error) => {
@@ -244,7 +232,6 @@ export default function NeedPostDetailPage() {
     );
   }
 
-  // Tarih formatı için yardımcı fonksiyon
   const formatDateLocalized = (
     dateValue: string | Date | null | undefined,
   ): string => {

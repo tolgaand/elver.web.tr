@@ -16,27 +16,23 @@ export default function ProfilePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("needPosts");
 
-  // Sayfa kimlik doğrulaması kontrol - useEffect ile yapıyoruz çünkü AuthConsumer artık genel olarak tanımlı
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/");
     }
   }, [status, router]);
 
-  // Get user profile data
   const { data: profile } = api.auth.getProfile.useQuery(undefined, {
     enabled: status === "authenticated",
     refetchOnWindowFocus: false,
   });
 
-  // Get invitation statistics
   const { data: invitationStats, isLoading: isLoadingInviteStats } =
     api.auth.getInvitationStats.useQuery(undefined, {
       enabled: status === "authenticated" && activeTab === "settings",
       refetchOnWindowFocus: false,
     });
 
-  // Get user's need posts
   const {
     data: needPosts,
     isLoading: isLoadingNeedPosts,
@@ -46,22 +42,18 @@ export default function ProfilePage() {
     refetchOnWindowFocus: false,
   });
 
-  // Get user's help offers
   const { data: helpOffers, isLoading: isLoadingHelpOffers } =
     api.helpOffer.getMyOffers.useQuery(undefined, {
       enabled: status === "authenticated" && activeTab === "helpOffers",
       refetchOnWindowFocus: false,
     });
 
-  // Need post status update mutation
   const updateNeedPostStatus = api.needPost.updateStatus.useMutation({
     onSuccess: () => {
-      // Refresh data after status update
       void refetchNeedPosts();
     },
   });
 
-  // Logout function
   const handleLogout = () => {
     void signOut();
   };
