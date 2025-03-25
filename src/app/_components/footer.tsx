@@ -23,13 +23,14 @@ export const Footer = () => {
                   <Link href="/ihtiyacim-var">İhtiyaç Bildir</Link>
                 </Button>
               </li>
+
               <li>
                 <Button
                   asChild
                   variant="link"
                   className="text-accent-300 h-auto p-0 hover:text-white"
                 >
-                  <Link href="/yardimim-var">Yardımım Var</Link>
+                  <Link href="/kurallar">Topluluk Kuralları</Link>
                 </Button>
               </li>
               <li>
@@ -38,20 +39,29 @@ export const Footer = () => {
                   variant="link"
                   className="text-accent-300 h-auto p-0 hover:text-white"
                 >
-                  <Link href="/hakkimizda">Hakkımızda</Link>
+                  <Link href="/gizlilik">Gizlilik Politikası</Link>
                 </Button>
               </li>
             </ul>
           </div>
           <div>
             <h3 className="mb-4 text-xl font-bold">İletişim</h3>
-            <p className="text-accent-300 mb-2">info@dayanisma-platformu.org</p>
+            <p className="text-accent-300 mb-2">info@elver.web.tr</p>
           </div>
         </div>
         <Separator className="my-6 bg-gray-700" />
         <div className="text-accent-300 text-center text-sm">
-          &copy; {new Date().getFullYear()} Dayanışma Platformu. Tüm hakları
-          saklıdır.
+          <p className="mb-2">
+            &copy; {new Date().getFullYear()} Elver. Bu platform tamamen
+            halkımıza yardım etmek amacıyla oluşturulmuştur.
+          </p>
+          <p className="text-xs">
+            Sorumluluk Reddi: Bu platform aracılığıyla sağlanan bilgiler ve
+            hizmetler &quot;olduğu gibi&quot; sunulmaktadır. Platform üzerinden
+            gerçekleştirilen hiçbir yardım veya bağış işleminde sorumluluk kabul
+            edilmemektedir. Kullanıcılar arasındaki tüm etkileşimler tamamen
+            kendi sorumluluklarındadır.
+          </p>
         </div>
       </div>
     </footer>

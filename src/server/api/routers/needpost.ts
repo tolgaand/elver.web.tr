@@ -188,7 +188,7 @@ export const needPostRouter = createTRPCRouter({
               id: true,
               name: true,
               surname: true,
-              profileImage: true,
+              image: true,
             },
           },
           category: true,
@@ -220,7 +220,7 @@ export const needPostRouter = createTRPCRouter({
               id: true,
               name: true,
               surname: true,
-              profileImage: true,
+              image: true,
             },
           },
           category: true,
@@ -294,7 +294,7 @@ export const needPostRouter = createTRPCRouter({
   }),
 
   // Get all active needs (those with status PENDING or INPROGRESS)
-  getActiveNeeds: protectedProcedure.query(async ({ ctx }) => {
+  getActiveNeeds: publicProcedure.query(async ({ ctx }) => {
     const posts = await ctx.db.needPost.findMany({
       where: {
         status: {

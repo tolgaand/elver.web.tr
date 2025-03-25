@@ -4,11 +4,52 @@ import { useParams } from "next/navigation";
 import { api } from "~/trpc/react";
 import Header from "~/app/_components/header";
 import Footer from "~/app/_components/footer";
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { useAuth } from "~/app/_components/auth";
 import dynamic from "next/dynamic";
+import { useSession, signIn } from "next-auth/react";
+
+// Types
+interface Tag {
+  id: string;
+  name: string;
+  value: string;
+}
+
+interface TagRelation {
+  tag: Tag;
+  tagId: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface SubCategory {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface NeedPost {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  locationLat: number;
+  locationLng: number;
+  locationName: string | null;
+  isUrgent: boolean;
+  isAnonymous: boolean;
+  contactMethod: string | null;
+  contactDetail: string | null;
+  createdAt: Date;
+  category: Category;
+  subCategory: SubCategory | null;
+  tags: TagRelation[];
+}
 
 // Dynamic import with no SSR for the Map component
 const Map = dynamic(() => import("~/app/_components/map"), {
@@ -20,9 +61,15 @@ const Map = dynamic(() => import("~/app/_components/map"), {
 
 export default function NeedPostDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { isAuthenticated, showLogin } = useAuth();
+  const { data: session, status } = useSession();
   const [offerMessage, setOfferMessage] = useState("");
   const [submittingOffer, setSubmittingOffer] = useState(false);
+
+  // Check if user is authenticated
+  const isAuthenticated = status === "authenticated";
+
+  // Function to trigger sign in
+  const showLogin = () => void signIn();
 
   // Fetch need post details
   const {
@@ -53,8 +100,8 @@ export default function NeedPostDetailPage() {
   const handleOfferSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isAuthenticated) {
-      showLogin();
+    if (status === "unauthenticated") {
+      void signIn();
       return;
     }
 
@@ -170,7 +217,7 @@ export default function NeedPostDetailPage() {
                 <div className="flex items-center gap-2 text-sm text-gray-500">
                   <span>Kategori:</span>
                   <span className="font-medium text-gray-900">
-                    {post.category.name}
+                    {post.category?.name || "Kategori Belirtilmemiş"}
                     {post.subCategory && ` › ${post.subCategory.name}`}
                   </span>
                 </div>
@@ -187,7 +234,7 @@ export default function NeedPostDetailPage() {
               {post.tags && post.tags.length > 0 && (
                 <div className="mt-6">
                   <div className="flex flex-wrap gap-2">
-                    {post.tags.map((tagRelation) => (
+                    {post.tags.map((tagRelation: TagRelation) => (
                       <span
                         key={tagRelation.tag.id}
                         className="inline-flex rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-800"

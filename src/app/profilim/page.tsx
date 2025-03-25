@@ -7,26 +7,33 @@ import Header from "../_components/header";
 import Footer from "../_components/footer";
 import Link from "next/link";
 import type { HelpStatus } from "@prisma/client";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 
 type TabType = "needPosts" | "helpOffers" | "settings";
 
 export default function ProfilePage() {
-  const { isAuthenticated, isLoading, logout } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("needPosts");
 
-  // Redirect to home if not authenticated
+  // Sayfa kimlik doğrulaması kontrol - useEffect ile yapıyoruz çünkü AuthConsumer artık genel olarak tanımlı
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (status === "unauthenticated") {
       router.push("/");
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [status, router]);
 
   // Get user profile data
   const { data: profile, isLoading: isLoadingProfile } =
     api.auth.getProfile.useQuery(undefined, {
-      enabled: isAuthenticated,
+      enabled: status === "authenticated",
+      refetchOnWindowFocus: false,
+    });
+
+  // Get invitation statistics
+  const { data: invitationStats, isLoading: isLoadingInviteStats } =
+    api.auth.getInvitationStats.useQuery(undefined, {
+      enabled: status === "authenticated" && activeTab === "settings",
       refetchOnWindowFocus: false,
     });
 
@@ -36,14 +43,14 @@ export default function ProfilePage() {
     isLoading: isLoadingNeedPosts,
     refetch: refetchNeedPosts,
   } = api.needPost.getMyPosts.useQuery(undefined, {
-    enabled: isAuthenticated && activeTab === "needPosts",
+    enabled: status === "authenticated" && activeTab === "needPosts",
     refetchOnWindowFocus: false,
   });
 
   // Get user's help offers
   const { data: helpOffers, isLoading: isLoadingHelpOffers } =
     api.helpOffer.getMyOffers.useQuery(undefined, {
-      enabled: isAuthenticated && activeTab === "helpOffers",
+      enabled: status === "authenticated" && activeTab === "helpOffers",
       refetchOnWindowFocus: false,
     });
 
@@ -57,7 +64,7 @@ export default function ProfilePage() {
 
   // Logout function
   const handleLogout = () => {
-    void logout();
+    void signOut();
   };
 
   const handleStatusChange = (postId: string, newStatus: string) => {
@@ -66,22 +73,6 @@ export default function ProfilePage() {
       status: newStatus as HelpStatus,
     });
   };
-
-  if (isLoading || !isAuthenticated) {
-    return (
-      <div className="flex min-h-screen flex-col">
-        <Header />
-        <main className="flex-1 bg-gray-50 py-12">
-          <div className="container mx-auto px-4">
-            <div className="flex justify-center">
-              <div className="border-primary-500 h-10 w-10 animate-spin rounded-full border-4 border-t-transparent"></div>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
 
   const formatDate = (dateString: Date) => {
     return new Date(dateString).toLocaleDateString("tr-TR", {
@@ -377,39 +368,106 @@ export default function ProfilePage() {
                   Hesap Ayarları
                 </h2>
                 <div className="py-4">
-                  <div className="mb-6 rounded-md bg-yellow-50 p-4">
-                    <p className="text-sm text-yellow-800">
-                      Hesap ayarları yakında kullanıma açılacaktır.
-                    </p>
-                  </div>
+                  <div className="mb-6 grid gap-6 md:grid-cols-2">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Telefon Numarası
+                        </label>
+                        <div className="mt-1">
+                          <input
+                            type="tel"
+                            disabled
+                            value={profile?.phone ?? ""}
+                            className="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-md border-gray-300 bg-gray-100 p-2 shadow-sm sm:text-sm"
+                          />
+                        </div>
+                      </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Telefon Numarası
-                      </label>
-                      <div className="mt-1">
-                        <input
-                          type="tel"
-                          disabled
-                          value={profile?.phone ?? ""}
-                          className="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-md border-gray-300 bg-gray-100 p-2 shadow-sm sm:text-sm"
-                        />
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Eposta Adresi
+                        </label>
+                        <div className="mt-1">
+                          <input
+                            type="email"
+                            disabled
+                            value={profile?.email ?? ""}
+                            className="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-md border-gray-300 bg-gray-100 p-2 shadow-sm sm:text-sm"
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Eposta Adresi
-                      </label>
-                      <div className="mt-1">
-                        <input
-                          type="email"
-                          disabled
-                          value={profile?.email ?? ""}
-                          className="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-md border-gray-300 bg-gray-100 p-2 shadow-sm sm:text-sm"
-                        />
+                    {/* Invitation Section */}
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                      <h3 className="mb-4 text-lg font-medium text-gray-900">
+                        Arkadaşlarını Davet Et
+                      </h3>
+
+                      <div className="mb-4">
+                        <p className="text-sm text-gray-600">
+                          Arkadaşlarını davet ederek platformumuza katılmalarını
+                          sağlayabilirsin.
+                        </p>
                       </div>
+
+                      {isLoadingInviteStats ? (
+                        <div className="flex justify-center py-4">
+                          <div className="border-primary-500 h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"></div>
+                        </div>
+                      ) : invitationStats ? (
+                        <>
+                          <div className="mb-4">
+                            <div className="flex items-center justify-between rounded-md bg-white p-2">
+                              <div className="truncate font-mono text-sm">
+                                {typeof window !== "undefined"
+                                  ? `${window.location.origin}/auth/signin?inviteCode=${invitationStats.referralCode}`
+                                  : "Davet kodu yükleniyor..."}
+                              </div>
+                              <button
+                                onClick={() => {
+                                  if (typeof window !== "undefined") {
+                                    void navigator.clipboard.writeText(
+                                      `${window.location.origin}/auth/signin?inviteCode=${invitationStats.referralCode}`,
+                                    );
+                                    alert("Davet linki kopyalandı!");
+                                  }
+                                }}
+                                className="ml-2 rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800 hover:bg-gray-200"
+                              >
+                                Kopyala
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-gray-700">
+                                Kalan Davet Hakkın:
+                              </p>
+                              <p className="text-lg font-bold text-gray-900">
+                                {invitationStats.remainingInvites}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-sm font-medium text-gray-700">
+                                Davet Ettiğin Kişi Sayısı:
+                              </p>
+                              <p className="text-lg font-bold text-gray-900">
+                                {invitationStats.referredCount}
+                              </p>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="rounded-md bg-yellow-50 p-4">
+                          <p className="text-sm text-yellow-800">
+                            Davet bilgileri yüklenirken bir sorun oluştu.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

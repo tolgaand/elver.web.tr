@@ -37,11 +37,7 @@ export default function RecentNeedsTable() {
 
   // İhtiyaç detayına gitmek için
   const handleViewDetails = (id: string) => {
-    if (status === "authenticated") {
-      router.push(`/ilanlar/ihtiyac/${id}`);
-    } else {
-      void signIn();
-    }
+    router.push(`/ilanlar/ihtiyac/${id}`);
   };
 
   // Tarih formatla

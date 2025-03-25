@@ -1,4 +1,4 @@
-import type { Category } from "../_components/CategoryCard";
+import type { Category } from "../_components/category-card";
 
 export const categories: Category[] = [
   {

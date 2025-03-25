@@ -3,7 +3,6 @@
 
 generator client {
     provider        = "prisma-client-js"
-    previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -52,7 +51,7 @@ model User {
     lastLocationTime  DateTime?
     
     // Referral system
-    referralCode      String    @unique @default(cuid()) // Kullanıcının benzersiz davet kodu
+    referralCode      String    @unique // Kullanıcının benzersiz davet kodu
     referredBy        User?     @relation("UserReferrals", fields: [referredById], references: [id], onDelete: Restrict, onUpdate: Restrict)
     referredById      String?
     referrals         User[]    @relation("UserReferrals")
@@ -69,6 +68,7 @@ model User {
     helpOffers        HelpOffer[]
     accounts          Account[]
     sessions          Session[]
+    feedbacks         Feedback[]  // Kullanıcı geri bildirimleri
 
     @@index([phone])
     @@index([email])
@@ -76,44 +76,39 @@ model User {
 }
 
 model Account {
-  id                 String    @id @default(cuid())
-  userId             String
-  providerType       String
-  providerId         String
-  providerAccountId  String
-  refreshToken       String?
-  accessToken        String?
-  accessTokenExpires DateTime?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  user               User      @relation(fields: [userId], references: [id])
+    id                       String  @id @default(cuid())
+    userId                   String
+    type                     String
+    provider                 String
+    providerAccountId        String
+    refresh_token            String? // @db.Text
+    access_token             String? // @db.Text
+    expires_at               Int?
+    token_type               String?
+    scope                    String?
+    id_token                 String? // @db.Text
+    session_state            String?
+    user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    refresh_token_expires_in Int?
 
-  @@unique([providerId, providerAccountId])
+    @@unique([provider, providerAccountId])
 }
-
 
 model Session {
-  id           String   @id @default(cuid())
-  userId       String
-  expires      DateTime
-  sessionToken String   @unique
-  accessToken  String   @unique
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  user         User     @relation(fields: [userId], references: [id])
+    id           String   @id @default(cuid())
+    sessionToken String   @unique
+    userId       String
+    expires      DateTime
+    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model VerificationRequest {
-  id         String   @id @default(cuid())
-  identifier String
-  token      String   @unique
-  expires    DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+model VerificationToken {
+    identifier String
+    token      String   @unique
+    expires    DateTime
 
-  @@unique([identifier, token])
+    @@unique([identifier, token])
 }
-
 
 model Category {
     id          String   @id @default(cuid())
@@ -244,4 +239,22 @@ model HelpPostTag {
     tagId       String
     
     @@id([helpPostId, tagId])
+}
+
+// Kullanıcı önerileri ve geri bildirimleri
+model Feedback {
+    id          String   @id @default(cuid())
+    type        String   // "SUGGESTION", "BUG", "FEATURE", "OTHER"
+    title       String
+    content     String
+    status      String   @default("PENDING") // "PENDING", "REVIEWED", "IMPLEMENTED", "REJECTED"
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    
+    // İlişkiler
+    user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId      String
+    
+    @@index([userId])
+    @@index([status])
 }

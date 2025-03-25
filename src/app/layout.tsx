@@ -5,6 +5,7 @@ import { Georama } from "next/font/google";
 import { TRPCReactProvider } from "~/trpc/react";
 import LocationPermissionWrapper from "./_components/location-permission-wrapper";
 import { SessionProvider } from "next-auth/react";
+import AuthConsumer from "./_components/auth-consumer";
 
 const georama = Georama({
   subsets: ["latin"],
@@ -29,7 +30,9 @@ export default function RootLayout({
       <body className={`font-sans ${georama.variable}`}>
         <TRPCReactProvider>
           <SessionProvider>
-            <LocationPermissionWrapper>{children}</LocationPermissionWrapper>
+            <LocationPermissionWrapper>
+              <AuthConsumer>{children}</AuthConsumer>
+            </LocationPermissionWrapper>
           </SessionProvider>
         </TRPCReactProvider>
       </body>

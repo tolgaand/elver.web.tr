@@ -1,14 +1,18 @@
+"use client";
+
 import Link from "next/link";
-import { FaHandFist } from "react-icons/fa6";
+import { FaHandFist, FaLightbulb } from "react-icons/fa6";
 import { Button } from "~/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import AuthModal from "./auth-modal";
+import FeedbackPopup from "./feedback-popup";
 import { useState } from "react";
 
 export default function Header() {
   const { data: session, status } = useSession();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
   const router = useRouter();
 
   return (
@@ -41,7 +45,20 @@ export default function Header() {
           </>
         )}
         {status === "authenticated" && (
-          <Button onClick={() => router.push("/profilim")}>Profilim</Button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setShowFeedbackPopup(true)}
+              className="flex items-center rounded-full bg-yellow-100 p-2 text-yellow-600 hover:bg-yellow-200"
+              title="Öneri ve Geri Bildirim"
+            >
+              <FaLightbulb className="h-5 w-5" />
+            </button>
+            <Button onClick={() => router.push("/profilim")}>Profilim</Button>
+            <FeedbackPopup
+              isOpen={showFeedbackPopup}
+              onClose={() => setShowFeedbackPopup(false)}
+            />
+          </div>
         )}
       </div>
     </header>

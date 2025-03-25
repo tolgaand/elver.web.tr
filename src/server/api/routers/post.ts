@@ -1,5 +1,4 @@
 import { z } from "zod";
-
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 export const postRouter = createTRPCRouter({
@@ -11,21 +10,6 @@ export const postRouter = createTRPCRouter({
       };
     }),
 
-  create: publicProcedure
-    .input(z.object({ name: z.string().min(1) }))
-    .mutation(async ({ ctx, input }) => {
-      return ctx.db.post.create({
-        data: {
-          name: input.name,
-        },
-      });
-    }),
-
-  getLatest: publicProcedure.query(async ({ ctx }) => {
-    const post = await ctx.db.post.findFirst({
-      orderBy: { createdAt: "desc" },
-    });
-
-    return post ?? null;
-  }),
+  // Örnek örnek metodunu kaldırdım çünkü post tablosu yok
+  // Sadece hello endpointi korundu
 });
