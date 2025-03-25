@@ -1,0 +1,65 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Frontend Development Standards and Directory Structure
+globs:
+alwaysApply: true
+---
+
+# Frontend Directory Structure
+
+The frontend project must follow this standard directory structure:
+
+```
+root
+  ├── public            # Static files, images, fonts, and other assets that need to be publicly accessible
+  ├── src               # Source files
+      ├── types         # TypeScript type definitions, interfaces, and type declarations
+      ├── assets        # Images, fonts, and other static assets used within the application
+      ├── components    # Reusable UI components (buttons, cards, inputs, etc.)
+      ├── pages/app     # Page components (Next.js pages) or App directory (for Next.js 13+)
+      ├── hooks         # Custom React hooks for reusable logic
+      ├── layouts       # Layout components that wrap pages (headers, footers, etc.)
+      ├── sections      # Larger page sections composed of multiple components
+      ├── theme         # Theme configuration, styling variables, and global styles
+      ├── utils         # Utility functions and helper methods
+      ├── routes        # Route definitions and navigation configuration
+  ├── next.config.js    # Next.js configuration
+  ├── package.json      # Project dependencies and scripts
+```
+
+# Each Directory's Purpose
+
+- **public**: For static assets directly accessible via the browser
+- **types**: All TypeScript type definitions and interfaces
+- **assets**: Internal images, icons, fonts, and other media
+- **components**: Small, reusable UI elements that are used across the application
+- **pages/app**: Page components or app directory depending on Next.js version
+- **hooks**: Custom React hooks for state management and logic
+- **layouts**: Page layouts, navigation components, header/footer
+- **sections**: Larger UI sections composed of multiple components
+- **theme**: Styling configuration, color palettes, typography
+- **utils**: Helper functions, formatters, validators
+- **routes**: Application routing logic
+
+# File Organization Rules
+
+1. Files should be organized in their appropriate directories based on their purpose
+2. Component files should be named using kebab-case for files (e.g., `button.tsx`) and PascalCase for component names (e.g., `Button`)
+3. Multi-word component files MUST use kebab-case with hyphens (e.g., `category-card.tsx`, not `categorycard.tsx`)
+4. Utility and hook files should be named using camelCase (e.g., `useAuth.ts`)
+5. Each component should ideally be in its own directory with any related subcomponents
+6. Components should be organized into subdirectories by feature or type
+7. Non-route directories within `/app` should be prefixed with underscore (e.g., `_components`, `_data`)
+
+# Additional Guidelines
+
+- Keep components small and focused on a single responsibility
+- Use TypeScript for type safety
+- Follow consistent naming conventions
+- Implement proper code organization within each directory
+- Keep related files close to each other
+- Use index files for clean imports
