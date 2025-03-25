@@ -8,7 +8,6 @@ import Link from "next/link";
 
 interface AuthModalProps {
   callbackUrl?: string;
-  children?: React.ReactNode;
   onClose?: () => void;
   isOpen?: boolean;
 }
@@ -18,7 +17,7 @@ export type AuthModalRef = {
 };
 
 const AuthModal = forwardRef<AuthModalRef, AuthModalProps>(
-  ({ callbackUrl = "/", children, onClose, isOpen = false }, ref) => {
+  ({ callbackUrl = "/", onClose, isOpen = false }, ref) => {
     const [open, setOpen] = useState(isOpen);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);

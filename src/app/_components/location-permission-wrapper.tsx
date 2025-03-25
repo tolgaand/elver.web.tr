@@ -13,13 +13,11 @@ export default function LocationPermissionWrapper({
   const [locationPermissionGranted, setLocationPermissionGranted] =
     useState(false);
   const [loading, setLoading] = useState(true);
-  const [position, setPosition] = useState<GeolocationPosition | null>(null);
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
 
   const updateLocation = () => {
     navigator.geolocation.getCurrentPosition(
       (newPosition) => {
-        setPosition(newPosition);
         console.log("Current location:", {
           lat: newPosition.coords.latitude,
           lng: newPosition.coords.longitude,

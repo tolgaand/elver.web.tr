@@ -5,11 +5,9 @@ import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
 import { api } from "~/trpc/react";
-import { useSession, signIn } from "next-auth/react";
 
 export default function RecentNeedsTable() {
   const router = useRouter();
-  const { data: session, status } = useSession();
   const [isClient, setIsClient] = useState(false);
 
   // Son ihtiyaçları getir
@@ -47,7 +45,7 @@ export default function RecentNeedsTable() {
         addSuffix: true,
         locale: tr,
       });
-    } catch (error) {
+    } catch {
       return "Bilinmiyor";
     }
   };

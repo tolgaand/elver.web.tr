@@ -5,13 +5,16 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
+// Tip tanımı
+interface DefaultIconPrototype extends L.Icon.Default {
+  _getIconUrl?: string;
+}
+
 // En basit çözüm: CDN üzerinden doğrudan hazır iconları kullan
 const fixIcons = () => {
-  // @ts-expect-error - Leaflet internals
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  delete L.Icon.Default.prototype._getIconUrl;
+  // Tip tanımını kullanarak güvenli erişim sağla
+  delete (L.Icon.Default.prototype as DefaultIconPrototype)._getIconUrl;
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
   L.Icon.Default.mergeOptions({
     iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
     iconRetinaUrl:

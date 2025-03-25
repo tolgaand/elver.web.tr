@@ -23,7 +23,7 @@ const handler = async (req: NextRequest) => {
               );
             }
           : undefined,
-      responseMeta({ ctx, errors }) {
+      responseMeta({ ctx, errors: _errors }) {
         // Check if we have a cookie to set
         const cookieHeader = ctx?.headers.get("Set-Cookie");
         console.log(`[TRPC] Outgoing cookie header: ${cookieHeader}`);

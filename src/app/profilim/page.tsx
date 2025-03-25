@@ -12,7 +12,7 @@ import { useSession, signOut } from "next-auth/react";
 type TabType = "needPosts" | "helpOffers" | "settings";
 
 export default function ProfilePage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("needPosts");
 
@@ -24,11 +24,10 @@ export default function ProfilePage() {
   }, [status, router]);
 
   // Get user profile data
-  const { data: profile, isLoading: isLoadingProfile } =
-    api.auth.getProfile.useQuery(undefined, {
-      enabled: status === "authenticated",
-      refetchOnWindowFocus: false,
-    });
+  const { data: profile } = api.auth.getProfile.useQuery(undefined, {
+    enabled: status === "authenticated",
+    refetchOnWindowFocus: false,
+  });
 
   // Get invitation statistics
   const { data: invitationStats, isLoading: isLoadingInviteStats } =

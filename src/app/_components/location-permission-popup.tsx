@@ -51,7 +51,7 @@ export default function LocationPermissionPopup({
     setIsLoading(true);
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      (_position) => {
         setPermissionState("granted");
         setIsLoading(false);
         onPermissionGranted();

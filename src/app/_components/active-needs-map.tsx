@@ -9,11 +9,15 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import AuthModal from "./auth-modal";
 
-const fixIcons = () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  delete (L.Icon.Default.prototype as any)._getIconUrl;
+// L.Icon.Default.prototype için tip tanımı
+interface DefaultIconPrototype extends L.Icon.Default {
+  _getIconUrl?: string;
+}
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+const fixIcons = () => {
+  // Tip tanımını kullanarak güvenli erişim sağla
+  delete (L.Icon.Default.prototype as DefaultIconPrototype)._getIconUrl;
+
   L.Icon.Default.mergeOptions({
     iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
     iconRetinaUrl:
@@ -46,7 +50,6 @@ function MapCenterController({ markers }: { markers: NeedMarker[] }) {
         typeof marker.lat === "number" &&
         typeof marker.lng === "number"
       ) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         map.setView([marker.lat, marker.lng], 12);
       }
     } else {
@@ -59,9 +62,7 @@ function MapCenterController({ markers }: { markers: NeedMarker[] }) {
           const points = validMarkers.map(
             (m) => [m.lat, m.lng] as [number, number],
           );
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
           const bounds = L.latLngBounds(points);
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
           map.fitBounds(bounds, { padding: [50, 50] });
         }
       } catch (error) {
@@ -74,7 +75,7 @@ function MapCenterController({ markers }: { markers: NeedMarker[] }) {
 }
 
 export default function ActiveNeedsMap() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [markers, setMarkers] = useState<NeedMarker[]>([]);
   const [mounted, setMounted] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);

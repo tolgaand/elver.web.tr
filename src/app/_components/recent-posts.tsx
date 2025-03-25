@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 export const RecentPosts = () => {
   return (
     <div className="space-y-4">

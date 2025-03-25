@@ -33,24 +33,6 @@ interface SubCategory {
   slug: string;
 }
 
-interface NeedPost {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  locationLat: number;
-  locationLng: number;
-  locationName: string | null;
-  isUrgent: boolean;
-  isAnonymous: boolean;
-  contactMethod: string | null;
-  contactDetail: string | null;
-  createdAt: Date;
-  category: Category;
-  subCategory: SubCategory | null;
-  tags: TagRelation[];
-}
-
 // Dynamic import with no SSR for the Map component
 const Map = dynamic(() => import("~/app/_components/map"), {
   ssr: false,
@@ -61,7 +43,7 @@ const Map = dynamic(() => import("~/app/_components/map"), {
 
 export default function NeedPostDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [offerMessage, setOfferMessage] = useState("");
   const [submittingOffer, setSubmittingOffer] = useState(false);
 

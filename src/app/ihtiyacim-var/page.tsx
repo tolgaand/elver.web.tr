@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import Header from "../_components/header";
 import Footer from "../_components/footer";
 import { api } from "~/trpc/react";
 import { useRouter } from "next/navigation";
-import { useSession, signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import AuthModal from "../_components/auth-modal";
 
 // Create an enum for contact preferences
@@ -18,7 +18,7 @@ enum ContactPreference {
 
 export default function IhtiyacimVarPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [contactMethod, setContactMethod] = useState<ContactPreference>(
@@ -27,7 +27,6 @@ export default function IhtiyacimVarPage() {
   const [contactDetail, setContactDetail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const authModalRef = useRef<{ setOpen: (open: boolean) => void }>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Create need post mutation

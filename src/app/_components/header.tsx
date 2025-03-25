@@ -10,7 +10,7 @@ import FeedbackPopup from "./feedback-popup";
 import { useState } from "react";
 
 export default function Header() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
   const router = useRouter();
