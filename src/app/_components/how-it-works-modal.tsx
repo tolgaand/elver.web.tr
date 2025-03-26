@@ -2,14 +2,7 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
-import {
-  FaMapMarkerAlt,
-  FaClock,
-  FaHandHoldingHeart,
-  FaUsers,
-  FaCheckCircle,
-  FaLink,
-} from "react-icons/fa";
+import { FaClock, FaCheckCircle, FaLink } from "react-icons/fa";
 
 interface HowItWorksModalProps {
   isOpen: boolean;

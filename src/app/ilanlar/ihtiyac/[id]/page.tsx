@@ -29,36 +29,6 @@ interface TagRelation {
   tagId: string;
 }
 
-// NeedPost interface used in this component
-interface NeedPost {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  isUrgent: boolean;
-  isAnonymous: boolean;
-  isExpired?: boolean;
-  contactMethod?: string | null;
-  contactDetail?: string | null;
-  locationLat: number;
-  locationLng: number;
-  locationName?: string | null;
-  createdAt: string | Date;
-  updatedAt: string | Date;
-  expiresAt?: string | Date | null;
-  userId: string;
-  categoryId: string;
-  category?: { id: string; name: string; slug: string };
-  subCategory?: { id: string; name: string; slug: string } | null;
-  tags?: TagRelation[];
-  helpOffers?: Array<{
-    id: string;
-    status: string;
-    message?: string | null;
-    userId: string;
-  }>;
-}
-
 // Dynamic import with no SSR for the Map component
 const Map = dynamic(() => import("~/app/_components/map"), {
   ssr: false,

@@ -48,6 +48,7 @@ export const needPostRouter = createTRPCRouter({
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "Geçerli bir e-posta adresi giriniz",
+            cause: error,
           });
         }
       } else if (
